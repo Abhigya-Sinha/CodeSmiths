@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LifeLoop - Ultimate Life Management Hub</title>
+  <style>
+    /* Reset and base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      color: #6b7280;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      scroll-behavior: smooth;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated bubble background container */
+    #bubble-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: -1;
+      background: #ffffff;
+    }
+    
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.25;
+      filter: blur(14px);
+      pointer-events: none;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      animation-direction: alternate;
+      animation-fill-mode: forwards;
+    }
+
+    /* Sizes */
+    .bubble-small {
+      width: 40px;
+      height: 40px;
+      animation-name: floatSmall;
+      animation-duration: 12s;
+    }
+
+    .bubble-medium {
+      width: 80px;
+      height: 80px;
+      animation-name: floatMedium;
+      animation-duration: 20s;
+    }
+
+    .bubble-large {
+      width: 150px;
+      height: 150px;
+      animation-name: floatLarge;
+      animation-duration: 30s;
+    }
+
+    /* Colors pastel pink and blue */
+    .bubble-pink {
+      background: radial-gradient(circle at center, #f7c6c7, #f2a0a2);
+    }
+
+    .bubble-blue {
+      background: radial-gradient(circle at center, #a5c6f7, #7b9bf2);
+    }
+
+    /* Keyframes: gentle up/down + side-to-side motion */
+    @keyframes floatSmall {
+      0% {
+        transform: translate(0, 0);
+        opacity: 0.2;
+      }
+      25% {
+        transform: translate(8px, -10px);
+        opacity: 0.3;
+      }
+      50% {
+        transform: translate(-6px, -5px);
+        opacity: 0.35;
+      }
+      75% {
+        transform: translate(5px, -8px);
+        opacity: 0.3;
+      }
+      100% {
+        transform: translate(0, 0);
+        opacity: 0.2;
+      }
+    }
+
+    @keyframes floatMedium {
+      0% {
+        transform: translate(0, 0);
+        opacity: 0.2;
+      }
+      25% {
+        transform: translate(-12px, -20px);
+        opacity: 0.4;
+      }
+      50% {
+        transform: translate(10px, -15px);
+        opacity: 0.45;
+      }
+      75% {
+        transform: translate(-8px, -18px);
+        opacity: 0.4;
+      }
+      100% {
+        transform: translate(0, 0);
+        opacity: 0.2;
+      }
+    }
+
+    @keyframes floatLarge {
+      0% {
+        transform: translate(0, 0);
+        opacity: 0.15;
+      }
+      25% {
+        transform: translate(15px, -30px);
+        opacity: 0.3;
+      }
+      50% {
+        transform: translate(-12px, -20px);
+        opacity: 0.35;
+      }
+      75% {
+        transform: translate(10px, -28px);
+        opacity: 0.3;
+      }
+      100% {
+        transform: translate(0, 0);
+        opacity: 0.15;
+      }
+    }
+
+    @keyframes popup {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      flex-grow: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Sticky header */
+    header {
+      position: sticky;
+      top: 0;
+      background-color: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      z-index: 1000;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    nav {
+      display: flex;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #111827;
+      letter-spacing: 0.05em;
+      user-select: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      color: #6b7280;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .nav-links a.active,
+    .nav-links a:hover,
+    .nav-links a:focus {
+      background-color: #3b82f6;
+      color: white;
+      outline: none;
+      box-shadow: 0 2px 10px rgb(59 130 246 / 0.4);
+    }
+
+    /* Hero Section (Home) */
+    #home {
+      padding-top: 5rem;
+      padding-bottom: 5rem;
+      display: none;
+      text-align: center;
+      color: #111827;
+    }
+
+    #home.active {
+      display: block;
+    }
+
+    #home h1 {
+      font-size: 4rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      user-select: none;
+    }
+
+    #home p.lead {
+      font-size: 1.5rem;
+      max-width: 600px;
+      margin: 0 auto 3rem auto;
+      color: #374151;
+      user-select: none;
+    }
+
+    #home button.cta {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      padding: 1.25rem 3rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    #home button.cta:hover,
+    #home button.cta:focus {
+      background-color: #2563eb;
+      outline: none;
+      box-shadow: 0 4px 14px rgb(37 99 235 / 0.6);
+    }
+
+    /* Dashboard */
+    #dashboard {
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+      display: none;
+      color: #111827;
+    }
+
+    #dashboard.active {
+      display: block;
+    }
+
+    #dashboard h2 {
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      user-select: none;
+    }
+
+    .cards {
+      display: grid;
+      gap: 2.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .card {
+      background: #f9fafb;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 6px rgb(0 0 0 / 0.1);
+      padding: 2rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      color: #374151;
+    }
+
+    .card:hover,
+    .card:focus {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 20px rgb(59 130 246 / 0.3);
+      outline: none;
+    }
+
+    .card svg,
+    .card img {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1rem;
+      stroke: #3b82f6;
+      fill: #3b82f6;
+      flex-shrink: 0;
+    }
+
+    .card p {
+      font-weight: 600;
+      font-size: 1.125rem;
+    }
+
+    /* Utility Pages */
+    .utility-page {
+      max-width: 700px;
+      margin: 2rem auto 4rem auto;
+      background: #f9fafb;
+      border-radius: 0.75rem;
+      padding: 2rem 2.5rem;
+      box-shadow: 0 1px 6px rgb(0 0 0 / 0.1);
+      display: none;
+      color: #374151;
+    }
+
+    .utility-page.active {
+      display: block;
+    }
+
+    .utility-page h2 {
+      color: #111827;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: center;
+      user-select: none;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    label {
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 0.25rem;
+      user-select: none;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      padding: 0.75rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+      color: #374151;
+      transition: border-color 0.2s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #3b82f6;
+      outline: none;
+      box-shadow: 0 0 0 3px rgb(59 130 246 / 0.3);
+    }
+
+    button[type="submit"] {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      font-weight: 700;
+      font-size: 1.125rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    button[type="submit"]:hover,
+    button[type="submit"]:focus {
+      background-color: #2563eb;
+      outline: none;
+      box-shadow: 0 0 0 4px rgb(37 99 235 / 0.6);
+    }
+
+    /* List Items */
+    .list {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .item {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 1rem 1.5rem;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
+      color: #374151;
+      position: relative;
+    }
+
+    .item p {
+      margin: 0.2rem 0;
+      font-size: 0.95rem;
+      word-wrap: break-word;
+      user-select: text;
+    }
+
+    .item button.delete-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: #ef4444;
+      border: none;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: white;
+      border-radius: 0.4rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      user-select: none;
+    }
+
+    .item button.delete-btn:hover,
+    .item button.delete-btn:focus {
+      background-color: #b91c1c;
+      outline: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      #home h1 {
+        font-size: 2.5rem;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="bubble-background">
+    <!-- Bubbles created by JS -->
+  </div>
+
+  <header>
+    <nav role="navigation" aria-label="Main navigation">
+      <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="#home" class="logo" id="nav-logo" tabindex="0">LifeLoop</a>
+        <div class="nav-links" role="menubar" aria-label="Primary navigation">
+          <a href="#home" class="nav-link active" role="menuitem" tabindex="0" id="nav-home">Home</a>
+          <a href="#dashboard" class="nav-link" role="menuitem" tabindex="-1" id="nav-dashboard">Dashboard</a>
+          <a href="#about" class="nav-link" role="menuitem" tabindex="-1" id="nav-about">About</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container" role="main">
+
+    <!-- Home Page -->
+    <section id="home" tabindex="0" aria-labelledby="home-title" role="region" class="active">
+      <h1 id="home-title">Welcome to LifeLoop</h1>
+      <p class="lead">Your ultimate life management hub for bills, subscriptions, chores, and more.</p>
+      <button class="cta" id="start-dashboard" aria-label="Go to Dashboard">Get Started</button>
+    </section>
+
+    <!-- Dashboard Page -->
+    <section id="dashboard" tabindex="0" aria-labelledby="dashboard-title" role="region" aria-hidden="true">
+      <h2 id="dashboard-title">Dashboard</h2>
+      <div class="cards" role="list">
+        <div tabindex="0" role="listitem" class="card" id="card-bills" aria-label="Navigate to Bills Utility">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+            <path d="M2 10h20"></path>
+            <path d="M6 6v12"></path>
+          </svg>
+          <p>Bills</p>
+        </div>
+        <div tabindex="0" role="listitem" class="card" id="card-subscriptions" aria-label="Navigate to Subscriptions Utility">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+          <p>Subscriptions</p>
+        </div>
+        <div tabindex="0" role="listitem" class="card" id="card-chores" aria-label="Navigate to Chore Share Utility">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <p>Chores</p>
+        </div>
+        <div tabindex="0" role="listitem" class="card" id="card-food" aria-label="Navigate to Food Expiry Utility">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2v10l8 4"></path>
+          </svg>
+          <p>Food Expiry</p>
+        </div>
+        <div tabindex="0" role="listitem" class="card" id="card-vehicle" aria-label="Navigate to Vehicle Care Utility">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M19 17a2 2 0 1 1-4 0"></path>
+            <path d="M5 17a2 2 0 1 1-4 0"></path>
+            <path d="M15 17V9a3 3 0 0 0-6 0v8"></path>
+            <rect x="3" y="13" width="18" height="4" rx="2" ry="2"></rect>
+          </svg>
+          <p>Vehicle Care</p>
+        </div>
+        <div tabindex="0" role="listitem" class="card" id="card-warranty" aria-label="Navigate to Warranties Utility">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-5H6v5a2 2 0 0 1-2 2H3z"></path>
+          </svg>
+          <p>Warranties</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Page -->
+    <section id="about" tabindex="0" aria-labelledby="about-title" role="region" aria-hidden="true">
+      <h2 id="about-title">About LifeLoop</h2>
+      <p>LifeLoop is your all-in-one life management hub designed to help you stay organized and on top of your daily tasks and responsibilities.</p>
+      <p>Manage your bills, subscriptions, chores, food expirations, vehicle care, and warranties – all from one place.</p>
+      <p>Created with modern web standards and a focus on clarity, accessibility, and elegant design.</p>
+    </br>
+    </br>
+      <h2 id="about-title">Contact Us.....</h2>
+      <p>Address : XYZ....</p>
+      <p>Phone No : 9999999999</p>
+      <p>Email ID : xyz@gmail.com</p>
+
+      
+    </section>
+
+    <!-- Utility Pages (Each utility) -->
+    <section id="bills" class="utility-page" tabindex="0" aria-labelledby="bills-title" role="region" aria-hidden="true">
+      <h2 id="bills-title">Manage Bills</h2>
+      <form id="bills-form" aria-label="Add a new bill">
+        <label for="bill-name">Bill Name</label>
+        <input type="text" id="bill-name" required autocomplete="off" />
+        <label for="bill-amount">Amount (INR)</label>
+        <input type="number" id="bill-amount" required min="0" step="0.01" />
+        <label for="bill-due">Due Date</label>
+        <input type="date" id="bill-due" required />
+        <button type="submit">Save Bill</button>
+      </form>
+      <div class="list" id="bills-list" aria-live="polite" aria-relevant="all"></div>
+    </section>
+
+    <section id="subscriptions" class="utility-page" tabindex="0" aria-labelledby="subscriptions-title" role="region" aria-hidden="true">
+      <h2 id="subscriptions-title">Manage Subscriptions</h2>
+      <form id="sub-form" aria-label="Add a new subscription">
+        <label for="sub-name">Subscription Name</label>
+        <input type="text" id="sub-name" required autocomplete="off" />
+        <label for="sub-date">Start Date</label>
+        <input type="date" id="sub-date" required />
+        <label for="sub-amount">Amount (INR)</label>
+        <input type="number" id="sub-amount" required min="0" step="0.01" />
+        <button type="submit">Save Subscription</button>
+      </form>
+      <div class="list" id="sub-list" aria-live="polite" aria-relevant="all"></div>
+    </section>
+
+    <section id="chores" class="utility-page" tabindex="0" aria-labelledby="chores-title" role="region" aria-hidden="true">
+      <h2 id="chores-title">Manage Chores</h2>
+      <form id="chore-form" aria-label="Add a new chore">
+        <label for="chore-task">Task</label>
+        <input type="text" id="chore-task" required autocomplete="off" />
+        <label for="chore-person">Assigned To</label>
+        <input type="text" id="chore-person" required autocomplete="off" />
+        <label for="chore-frequency">Frequency</label>
+        <select id="chore-frequency" required>
+          <option value="" disabled selected>Select frequency</option>
+          <option>Daily</option>
+          <option>Weekly</option>
+          <option>Monthly</option>
+        </select>
+        <button type="submit">Save Chore</button>
+      </form>
+      <div class="list" id="chore-list" aria-live="polite" aria-relevant="all"></div>
+    </section>
+
+    <section id="food" class="utility-page" tabindex="0" aria-labelledby="food-title" role="region" aria-hidden="true">
+      <h2 id="food-title">Manage Food Expiry</h2>
+      <form id="food-form" aria-label="Add a new food item">
+        <label for="food-name">Food Item</label>
+        <input type="text" id="food-name" required autocomplete="off" />
+        <label for="food-expiry">Expiry Date</label>
+        <input type="date" id="food-expiry" required />
+        <button type="submit">Save Food</button>
+      </form>
+      <div class="list" id="food-list" aria-live="polite" aria-relevant="all"></div>
+    </section>
+
+    <section id="vehicle" class="utility-page" tabindex="0" aria-labelledby="vehicle-title" role="region" aria-hidden="true">
+      <h2 id="vehicle-title">Manage Vehicle Care</h2>
+      <form id="vehicle-form" aria-label="Add a new vehicle service record">
+        <label for="vehicle-service">Service</label>
+        <input type="text" id="vehicle-service" required autocomplete="off" />
+        <label for="vehicle-date">Service Date</label>
+        <input type="date" id="vehicle-date" required />
+        <label for="vehicle-notes">Notes</label>
+        <textarea id="vehicle-notes" rows="3" autocomplete="off"></textarea>
+        <button type="submit">Save Service</button>
+      </form>
+      <div class="list" id="vehicle-list" aria-live="polite" aria-relevant="all"></div>
+    </section>
+
+    <section id="warranty" class="utility-page" tabindex="0" aria-labelledby="warranty-title" role="region" aria-hidden="true">
+      <h2 id="warranty-title">Manage Warranties</h2>
+      <form id="warranty-form" aria-label="Add a new warranty record">
+        <label for="warranty-item">Item</label>
+        <input type="text" id="warranty-item" required autocomplete="off" />
+        <label for="warranty-purchase">Purchase Date</label>
+        <input type="date" id="warranty-purchase" required />
+        <label for="warranty-expiry">Warranty Expiry</label>
+        <input type="date" id="warranty-expiry" required />
+        <label for="warranty-notes">Notes</label>
+        <textarea id="warranty-notes" rows="3" autocomplete="off"></textarea>
+        <button type="submit">Save Warranty</button>
+      </form>
+      <div class="list" id="warranty-list" aria-live="polite" aria-relevant="all"></div>
+    </section>
+  </main>
+
+  <script>
+    const storageKey = 'lifeloop_data';
+    let data = JSON.parse(localStorage.getItem(storageKey)) || {
+      bills: [],
+      subscriptions: [],
+      chores: [],
+      food: [],
+      vehicle: [],
+      warranty: []
+    };
+
+    function saveData() {
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      }).format(amount);
+    }
+
+    function renderList(listId, items, storeKey) {
+      const list = document.getElementById(listId);
+      list.innerHTML = '';
+      items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+
+        for (const key in item) {
+          if (!item[key]) continue;
+          const label = key
+            .replace(/[_-]/g, ' ')
+            .replace(/\b\w/g, c => c.toUpperCase());
+          let value = item[key];
+
+          if (key.includes('amount')) {
+            value = formatCurrency(value);
+          } else if (key.includes('date') || key.includes('due') || key.includes('expiry') || key.includes('purchase')) {
+            value = new Date(value).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+          }
+
+          div.innerHTML += `<p><strong>${label}:</strong> ${value}</p>`;
+        }
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-btn';
+        delBtn.innerText = 'Delete';
+        delBtn.addEventListener('click', () => {
+          if (confirm('Delete this item?')) {
+            data[storeKey].splice(index, 1);
+            saveData();
+            renderList(listId, data[storeKey], storeKey);
+          }
+        });
+
+        div.appendChild(delBtn);
+        list.appendChild(div);
+      });
+    }
+
+    // Handle form submissions
+    function handleForm(formId, listId, fieldIds, storeKey) {
+      const form = document.getElementById(formId);
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const obj = {};
+        let valid = true;
+        fieldIds.forEach(fieldId => {
+          const el = document.getElementById(fieldId);
+          if (!el.checkValidity()) {
+            valid = false;
+            el.reportValidity();
+          }
+          obj[fieldId.replace(/^.*?-/, '')] = el.value.trim();
+        });
+        if (!valid) return;
+        data[storeKey].push(obj);
+        saveData();
+        renderList(listId, data[storeKey], storeKey);
+        form.reset();
+      });
+    }
+
+    // Initialize lists and forms for all utilities
+    document.addEventListener('DOMContentLoaded', () => {
+      renderList('bills-list', data.bills, 'bills');
+      renderList('sub-list', data.subscriptions, 'subscriptions');
+      renderList('chore-list', data.chores, 'chores');
+      renderList('food-list', data.food, 'food');
+      renderList('vehicle-list', data.vehicle, 'vehicle');
+      renderList('warranty-list', data.warranty, 'warranty');
+
+      handleForm('bills-form', 'bills-list', ['bill-name', 'bill-amount', 'bill-due'], 'bills');
+      handleForm('sub-form', 'sub-list', ['sub-name', 'sub-date', 'sub-amount'], 'subscriptions');
+      handleForm('chore-form', 'chore-list', ['chore-task', 'chore-person', 'chore-frequency'], 'chores');
+      handleForm('food-form', 'food-list', ['food-name', 'food-expiry'], 'food');
+      handleForm('vehicle-form', 'vehicle-list', ['vehicle-service', 'vehicle-date', 'vehicle-notes'], 'vehicle');
+      handleForm('warranty-form', 'warranty-list', ['warranty-item', 'warranty-purchase', 'warranty-expiry', 'warranty-notes'], 'warranty');
+
+      // Router
+      function router() {
+        const hash = location.hash || '#home';
+        // Hide all pages
+        const pages = document.querySelectorAll('main > section');
+        pages.forEach(page => {
+          page.classList.remove('active');
+          page.setAttribute('aria-hidden', 'true');
+          page.tabIndex = -1;
+        });
+        // Show the page indicated by hash
+        const activePage = document.querySelector(hash);
+        if (activePage) {
+          activePage.classList.add('active');
+          activePage.removeAttribute('aria-hidden');
+          activePage.tabIndex = 0;
+          activePage.focus();
+        }
+
+        // Update nav link states
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          link.tabIndex = -1;
+          if (link.getAttribute('href') === hash) {
+            link.classList.add('active');
+            link.tabIndex = 0;
+          }
+        });
+      }
+
+      window.addEventListener('hashchange', router);
+      router();
+
+      // CTA button on home page to go to dashboard
+      document.getElementById('start-dashboard').addEventListener('click', () => {
+        location.hash = '#dashboard';
+      });
+
+      // Keyboard navigation for cards on dashboard
+      const dashboardCards = document.querySelectorAll('#dashboard .card');
+      dashboardCards.forEach(card => {
+        card.addEventListener('click', () => {
+          const targetId = card.id.replace('card-', '');
+          location.hash = '#' + targetId;
+        });
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
+        });
+      });
+
+      // Generate and animate bubbles in background
+      createBubbles(30);
+    });
+    
+    function createBubbles(count) {
+      const container = document.getElementById('bubble-background');
+      const colors = ['bubble-pink', 'bubble-blue'];
+      const sizes = ['bubble-small', 'bubble-medium', 'bubble-large'];
+      for (let i = 0; i < count; i++) {
+        const bubble = document.createElement('div');
+        bubble.classList.add('bubble');
+        bubble.classList.add(colors[Math.floor(Math.random() * colors.length)]);
+        bubble.classList.add(sizes[Math.floor(Math.random() * sizes.length)]);
+        bubble.style.top = (Math.random() * 95) + 'vh'; 
+        bubble.style.left = (Math.random() * 100) + 'vw';
+        bubble.style.animationDelay = (Math.random() * 15) + 's';
+        bubble.style.animationDuration = (10 + Math.random() * 20) + 's';
+        container.appendChild(bubble);
+      }
+    }
+  </script>
+</body>
+
+</html>
